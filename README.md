@@ -106,12 +106,6 @@ The user's identity comes from the demo session, never from the question. The pr
 
 **Possible next step:** normalize questions (spacing, punctuation, letter forms) before the cache lookup so that small wording differences still hit the cache.
 
-## Homework
-
-| Homework | Notebook | Output | Status |
-|---|---|---|---|
-| Day 1: real model on CPU | `homework/day1_real_model_renad.ipynb` | `results/day1/live_demo_result.json` | ✅ Done |
-| Day 2: tool validation and routing | `homework/day2_tools_renad.ipynb` | `results/day2/day2_tools_result.json` | ✅ Done |
 
 The homework runs in separate notebooks and is kept apart from the mock core project.
 
