@@ -1,92 +1,120 @@
-# Murshid Mini — LLM Application Engineering Project
+# Murshid Mini: LLM Application Engineering Project
 
-**Course:** LLM Application Engineering · SDA-AIE-213
-**Instructor:** Meaad Al-Marri
-**Student:** Renad
-**Reference material:** [Course repository](https://github.com/almiyead-rgb/murshid-llm-application-engineering-sda-aie-213) · [SDAIA Academy](https://github.com/SDAIAAcademy)
+![SDAIA Academy](https://img.shields.io/badge/SDAIA-Academy-0B6E4F) ![Course](https://img.shields.io/badge/Course-SDA--AIE--213-1F6FEB) ![Mode](https://img.shields.io/badge/mode-mock-lightgrey) ![Python](https://img.shields.io/badge/Python-3.9%2B%20%C2%B7%20CPU%20%C2%B7%20stdlib%20only-3776AB)
 
+**Program:** LLM Application Engineering · SDA-AIE-213 · delivered by **SDAIA Academy**
+**Reference material:** [Course repository](https://github.com/almiyead-rgb/murshid-llm-application-engineering-sda-aie-213)
 
-## About the project
+---
 
-Murshid Mini is a small, fictional assistant for government-style services. It answers known service questions, looks up the status of an application through a read-only tool that checks ownership, rejects unsuitable inputs, tests its own behaviour, and caches public answers safely. I built it over four days in **one cumulative Colab notebook**, adding new cells below the earlier ones each day.
+## Summary
 
-> **Important: this is a mock (`mode=mock`).** The "model" is `FakeClient`, a deterministic simulator that returns fixed answers. It is **not a live language model**. The project teaches the engineering around an LLM-shaped interface: input validation, a consistent response format, tools, guards, tests, caching and logging. All data is synthetic.
+Murshid Mini is a small bilingual (Arabic/English) assistant for fictional government services. It answers public service questions, looks up application status through a read-only tool that checks ownership, rejects unsafe or invalid input, tests its own behaviour against ten golden cases, and caches public answers safely. It runs in mock mode with a deterministic `FakeClient` instead of a real LLM. The goal was to learn the engineering *around* a model, so it uses no API keys, no GPU and no cost.
 
-## Architecture
+## Key results
+
+| Check | Result |
+|---|---|
+| Golden test suite (C01–C10) | **10/10 passed (100%)**, also passes through the cached app |
+| Cache experiment, same FAQ asked 3× | Mock calls **3 → 1**, hits `[false, true, true]`, **66.7%** hit rate |
+| Private data | No other user's status exposed; status lookups never cached |
+| Records | Unchanged after every run (tool is read-only) |
+| External API calls | **0**. `mode=mock` |
+| Fresh-runtime test | All 14 cells run top to bottom with no errors |
+
+> 100% means these ten chosen mock cases passed. It does **not** mean the system is safe or accurate, and it says nothing about a real LLM.
+
+## Project overview
+
+The project was built over four days in **one cumulative notebook**, with each day adding cells below the previous ones.
+
+| Day | Focus | Cells | What was added | Output |
+|---|---|---|---|---|
+| 1 | Foundations | 1–3 | Synthetic directory, `FakeClient`, `ask()`, response contract (`trace_id`, `answer`, `model`, `latency_ms`) | `baseline_results.json` |
+| 2 | Structure & tools | 4–6 | Structured ticket + validation, read-only `check_status` with ownership check, `route()` | `day2_results.json` |
+| 3 | Guard & test | 7–10 | Versioned prompt, input guard, output check, `run_pipeline()`, 10 golden cases | `day3_results.json` |
+| 4 | Measure & finish | 11–14 | Exact-match public FAQ cache (versioned key, 300 s TTL), metrics, regression, final report, export | `day4_results.json`, `final_report.json`, `metrics.json` |
+
+### How a question flows through the app
 
 ```
-User question → input guard → ticket extraction → validation
-             → public answer (FakeClient)  OR  read-only status tool (with ownership check)
-             → output check → response + minimal metrics
+Question → input guard → ticket extraction → ticket validation
+        ├─ public FAQ      → FakeClient answer (cacheable)
+        ├─ status request  → read-only check_status (ownership check, never cached)
+        ├─ missing reference → ask for it (no tool call)
+        └─ other / unsafe  → out_of_scope / blocked / invalid
+        → output check → response + privacy-safe metrics
 ```
 
-The interface, the business logic and the model client are kept separate, so a real provider could replace `FakeClient` later without rewriting the rest of the app.
+The code makes every decision: routing, access and refusals. The model only supplies wording, so a real provider could later replace `FakeClient` without changing the rules.
 
-## Progress
+### My changes (beyond the reference)
+- **Day 3:** added `'ignore all instructions'` to the blocked phrases, with an assert. The original list only caught "ignore previous".
+- **Day 4:** added a test showing that the Arabic FAQ is cached under its own key and returns the Arabic answer. Only the English FAQ was tested before.
 
-| Day | What I built | Notebook cells | Result file | Status |
-|---|---|---:|---|---|
-| 1 · Foundations | Synthetic directory, `FakeClient`, `ask()`, response contract | 1–3 | `results/core/baseline_results.json` | ✅ Done |
-| 2 · Structure & tools | Validated ticket, read-only `check_status`, ownership check | 4–6 | `results/core/day2_results.json` | ⬜ |
-| 3 · Guard & test | Versioned prompt, guards, pipeline, 10 fixed test cases | 7–10 | `results/core/day3_results.json` | ⬜ |
-| 4 · Measure & finish | Public FAQ cache, metrics, regression checks, export | 11–14 | `results/core/day4_results.json`, `final_report.json` | ⬜ |
+No tests were removed or weakened.
 
 ## Repository structure
 
 ```
-notebooks/murshid.ipynb        # The one cumulative project notebook (Days 1–4)
-homework/                      # One separate notebook per homework
-results/core/                  # JSON outputs from my own runs
-results/day1/, results/day4/   # Homework reports
-docs/project-notes.md          # Data, design decisions and observations
+LLM-application-engineering-/
+├── README.md
+├── notebooks/
+│   └── murshid_Renad.ipynb        # The cumulative project notebook (Days 1–4, cells 1–14)
+├── results/
+│   ├── core/                      # Outputs from my own run of the project notebook
+│   │   ├── baseline_results.json  # Day 1
+│   │   ├── day2_results.json      # Day 2
+│   │   ├── day3_results.json      # Day 3: 10 golden cases
+│   │   ├── day4_results.json      # Day 4: cache experiment
+│   │   ├── final_report.json      # Tests, cache, hypothetical cost, limits
+│   │   ├── metrics.json           # Privacy-safe per-request metrics
+│   │   └── synthetic_data.json    # The synthetic directory and records
+│   ├── day1/                      # Day 1 homework output
+│   └── day2/                      # Day 2 homework output
+└── homework/                      # One separate notebook per optional homework
+    ├── day1_real_model_renad.ipynb
+    └── day2_tools_renad.ipynb
 ```
 
-## How to run
+## Quick start
 
-1. Open `notebooks/murshid.ipynb` in Google Colab (File → Open notebook → GitHub, then paste this repository's URL).
-2. Choose **Runtime → Change runtime type → Python 3, CPU** (no accelerator).
-3. Run all the cells in order from the top. Each day depends on the cells before it.
-4. Outputs are saved to `murshid_outputs/` in the Colab Files panel.
+1. Open `notebooks/murshid_Renad.ipynb` in Google Colab. Either click the **Open in Colab** badge at the top of the notebook, or go to File → Open notebook → GitHub and paste this repository's URL.
+2. Go to **Runtime → Change runtime type** and choose **Python 3, CPU** (no accelerator).
+3. Go to **Runtime → Run all**. The cells must run in order, because each day depends on the earlier ones.
+4. Find the outputs in the Colab **Files** panel under `murshid_outputs/`. Cell 14 also creates `murshid_submission.zip`.
 
-Nothing needs installing. The core project uses only the Python standard library, with no API keys, no GPU, no model downloads and no Drive mount.
-
-## Day 1 results
-
-| Input | Answer |
-|---|---|
-| `كيف أتابع طلبي؟` | `يمكنك متابعة حالة طلبك باستخدام رقم المرجع.` |
-| `How can I check my application status?` | `You can check your application status using its reference number.` |
-| `ساعدني` | `ما الخدمة التي تحتاج مساعدة بشأنها؟` |
-| *(empty input)* | `Please enter a valid question.`, with no client call |
-
-Every response has `trace_id`, `answer`, `model=training-mock` and `latency_ms`. Trace IDs and timings change from run to run.
+Nothing needs installing: no `pip`, no API keys, no model download and no Drive mount.
 
 ## Data
 
-All the data is synthetic and built into the code:
-
+All data is synthetic and built into the code:
 - A public service directory with one Arabic and one English answer.
-- `REF-1001`: owned by `demo-user-1`, status `under_review`.
+- `REF-1001`: owned by `demo-user-1`, status `under_review` (normal path).
 - `REF-1002`: owned by `demo-user-2`, status `approved` (used to test access refusal).
 - `REF-9999`: deliberately missing (used for the not-found test).
 
-The project contains no real IDs, records, personal data or secrets.
+The user's identity comes from the demo session, never from the question. The project contains no real IDs, records, personal data or secrets.
 
 ## Limitations
 
-- `FakeClient` matches fixed questions exactly. Any other wording gets a clarification reply, so there is no real language understanding.
-- Passing the tests with the mock **does not** show anything about the quality of a real LLM.
-- `latency_ms` measures local Python execution, not model inference.
-- The input guards are teaching examples, not full security or privacy protection.
-- Identity and ownership checks use demo fixtures, not real authentication.
+- `FakeClient` only matches fixed questions, so there is no real language understanding.
+- The guards are keyword-based. A reworded attack ("disregard what you were told") can get through, and personal data is only caught as a 10-digit number.
+- The cache matches exact wording only, so a paraphrased FAQ is always a miss.
+- Ownership checks use demo fixtures, not real authentication.
+- `latency_ms` measures local Python time, not model inference. The cost figure ($0.0036/request) is an illustration with made-up prices, not real spend.
+
+**Possible next step:** normalize questions (spacing, punctuation, letter forms) before the cache lookup so that small wording differences still hit the cache.
 
 ## Homework
 
-| Homework | Notebook | Status |
-|---|---|---|
-| Day 1: real model (FLAN-T5 small, CPU) | `homework/day1_real_model.ipynb` | ⬜ |
-| Day 2: tool validation and routing | `homework/day2_tools.ipynb` | ⬜ |
-| Day 3: error handling | `homework/day3_errors.ipynb` | ⬜ |
-| Day 4: evaluating real-model answers | `homework/day4_evaluation.ipynb` | ⬜ |
+| Homework | Notebook | Output | Status |
+|---|---|---|---|
+| Day 1: real model on CPU | `homework/day1_real_model_renad.ipynb` | `results/day1/live_demo_result.json` | ✅ Done |
+| Day 2: tool validation and routing | `homework/day2_tools_renad.ipynb` | `results/day2/day2_tools_result.json` | ✅ Done |
 
-The real-model homework uses **actual local model inference** in a separate notebook, kept apart from the mock core project.
+The homework runs in separate notebooks and is kept apart from the mock core project.
+
+---
+
+*Built for **LLM Application Engineering (SDA-AIE-213)**, delivered by **SDAIA Academy**, instructor **Meaad Al-Marri**. All data is synthetic, for educational use only.*
