@@ -1,8 +1,6 @@
 # Murshid Mini: LLM Application Engineering Project
 
-![SDAIA Academy](https://img.shields.io/badge/SDAIA-Academy-0B6E4F) ![Course](https://img.shields.io/badge/Course-SDA--AIE--213-1F6FEB) ![Mode](https://img.shields.io/badge/mode-mock-lightgrey) ![Python](https://img.shields.io/badge/Python-3.9%2B%20%C2%B7%20CPU%20%C2%B7%20stdlib%20only-3776AB)
-
-**Program:** LLM Application Engineering · SDA-AIE-213 · delivered by **SDAIA Academy**
+**Program:** LLM Application Engineering · SDA-AIE-213 · delivered by [@SDAIAAcademy](https://github.com/SDAIAAcademy)
 **Reference material:** [Course repository](https://github.com/almiyead-rgb/murshid-llm-application-engineering-sda-aie-213)
 
 ---
