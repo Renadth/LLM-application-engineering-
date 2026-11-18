@@ -47,8 +47,11 @@ Question → input guard → ticket extraction → ticket validation
 The code makes every decision: routing, access and refusals. The model only supplies wording, so a real provider could later replace `FakeClient` without changing the rules.
 
 ### My changes (beyond the reference)
+- **Day 2:** added three extra asserts. A ticket with an invalid service value is rejected as `invalid_schema` with no tool call, `check_status('bad', ...)` returns `invalid_reference` on its own, and a lower-case `ref-1001` is normalised and still found.
 - **Day 3:** added `'ignore all instructions'` to the blocked phrases, with an assert. The original list only caught "ignore previous".
 - **Day 4:** added a test showing that the Arabic FAQ is cached under its own key and returns the Arabic answer. Only the English FAQ was tested before.
+
+Day 1 follows the reference code with no changes. No tests were removed or weakened.
 
 No tests were removed or weakened.
 
